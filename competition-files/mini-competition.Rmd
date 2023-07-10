@@ -6,3 +6,80 @@ output: github_document
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
+
+
+
+```{r}
+sales <- read.csv("data/inventory.csv")
+
+View(sales)
+```
+
+```{r}
+ggplot(sales, aes(x = week, y = sold)) +
+  geom_line() +
+  labs(x = "Week", y = "Units Sold", title = "Sales Over Time")
+```
+
+```{r}
+total_sales <- sales %>% 
+  group_by(item_no) %>% 
+  summarise(total_sold = sum(sold))
+
+ggplot(total_sales, aes(x = item_no, y = total_sold)) +
+  geom_bar(stat = "identity", fill = "steelblue") +
+  labs(x = "Item Number", y = "Total Units Sold", title = "Total Sales per Item")
+```
+```{r}
+ggplot(total_sales, aes(x = reorder(item_no, total_sold), y = total_sold)) +
+  geom_bar(stat = "identity", fill = "steelblue") +
+  labs(x = "Item Number", y = "Total Units Sold", title = "Total Sales per Item (Largest to Smallest)") +
+  coord_flip()
+```
+```{r}
+total_sales <- sales %>% 
+  group_by(item_no) %>% 
+  summarise(total_sold = sum(sold)) %>%
+  filter(total_sold >= 10000) %>% 
+  arrange(desc(total_sold)) 
+
+
+ggplot(total_sales, aes(x = reorder(item_no, total_sold), y = total_sold)) +
+  geom_bar(stat = "identity", fill = "steelblue") +
+  labs(x = "Item Number", y = "Total Units Sold", title = "Total Sales per Item (Largest to Smallest)") +
+  coord_flip() 
+```
+
+
+```{r}
+#unique_items <- unique(sales$item_no)
+
+# Print the unique count of item numbers
+#cat("List of unique item numbers:\n")
+#print(unique_items)
+
+
+unique_high_sales <- unique(total_sales$item_no)
+
+print(unique_high_sales)
+```
+```{r}
+item_sales <- total_sales %>%
+  group_by(item_no) %>%
+  summarise(total_sold = sum(total_sold)) %>%
+  filter(total_sold > 10000)
+
+# Merge with original dataset to include week
+filtered_sales <- item_sales %>%
+  inner_join(sales, by = "item_no")%>%
+  select(-total_sold)
+
+# Print the filtered dataset
+print(filtered_sales)
+```
+```{r}
+ggplot(filtered_sales, aes(x = week, y = sold)) +
+  geom_line() +
+  labs(x = "Week", y = "Units Sold", title = "Sales Over Time")
+```
+
